@@ -20,6 +20,20 @@ const mount = async (app: Application) => {
     context: () => ({ db })
   });
   server.applyMiddleware({ app, path: "/api" });
-  app.listen(process.env.PORT || 3000);
+
+  // app.use((req, res, next) => {
+  //   res.setHeader("Access-Control-Allow-Origin", "*");
+  //   res.setHeader("Access-Control-Allow-Methods", "POST");
+  //   res.setHeader(
+  //     "Access-Control-Allow-Headers",
+  //     "Content-Type, Authorization"
+  //   );
+  //   if (req.method === "OPTIONS") {
+  //     return res.sendStatus(200);
+  //   }
+  //   next();
+  // });
+
+  app.listen(process.env.PORT || 8080);
 };
 mount(express());

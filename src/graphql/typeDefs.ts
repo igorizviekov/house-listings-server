@@ -6,10 +6,11 @@ export const typeDefs = gql`
     _id: ID!
     title: String
     address: String
+    image: String
     price: Int
     numOfGuests: Int
     numOfBeds: Int
-    NumOfBaths: Int
+    numOfBaths: Int
     rating: Int
   }
 
