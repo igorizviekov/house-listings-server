@@ -1,24 +1,21 @@
 import { gql } from "apollo-server-express";
 
-//schema of list item
 export const typeDefs = gql`
-  type Listing {
-    _id: ID!
-    title: String
-    address: String
-    image: String
-    price: Int
-    numOfGuests: Int
-    numOfBeds: Int
-    numOfBaths: Int
-    rating: Int
+  type Viewer {
+    id: ID
+    token: String
+    avatar: String
+    hasWallet: Boolean
+    didRequest: Boolean!
   }
-
   type Query {
-    listings: [Listing!]!
+    authUrl: String!
   }
-
+  input LoginInput {
+    code: String!
+  }
   type Mutation {
-    deleteListing(id: ID): Listing!
+    login(input: LoginInput): Viewer!
+    logout: Viewer!
   }
 `;

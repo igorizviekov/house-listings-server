@@ -6,34 +6,23 @@ import express, { Application } from "express";
 
 //database
 import { connectDB } from "./database/index";
-
+import cookieParser from "cookie-parser";
 //apollo server
 import { ApolloServer } from "apollo-server-express";
-import { typeDefs, resolvers } from "./graphql/index";
+import { typeDefs, resolvers } from "./graphql";
 
 const mount = async (app: Application) => {
   const db = await connectDB();
+
+  //set  up cookies for log in
+  app.use(cookieParser(process.env.SECRET));
   //apollo setup
   const server = new ApolloServer({
     typeDefs,
     resolvers,
-    context: () => ({ db })
+    context: ({ req, res }) => ({ db, req, res })
   });
   server.applyMiddleware({ app, path: "/api" });
-
-  // app.use((req, res, next) => {
-  //   res.setHeader("Access-Control-Allow-Origin", "*");
-  //   res.setHeader("Access-Control-Allow-Methods", "POST");
-  //   res.setHeader(
-  //     "Access-Control-Allow-Headers",
-  //     "Content-Type, Authorization"
-  //   );
-  //   if (req.method === "OPTIONS") {
-  //     return res.sendStatus(200);
-  //   }
-  //   next();
-  // });
-
   app.listen(process.env.PORT || 8080);
 };
 mount(express());
