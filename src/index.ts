@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import express, { Application } from "express";
-
+import cors from "cors";
 //database
 import { connectDB } from "./database/index";
 import cookieParser from "cookie-parser";
@@ -16,6 +16,12 @@ const mount = async (app: Application) => {
 
   //set  up cookies for log in
   app.use(cookieParser(process.env.SECRET));
+
+  const corsOptions = {
+    origin: process.env.PUBLIC_URL,
+    credentials: true // <-- REQUIRED backend setting
+  };
+  app.use(cors(corsOptions));
   //apollo setup
   const server = new ApolloServer({
     typeDefs,

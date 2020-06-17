@@ -1,13 +1,22 @@
 import { IResolvers } from "apollo-server-express";
+import { Response, Request } from "express";
 import { Viewer, User, DB } from "../../../models/types";
 import { Google } from "../../../lib/api";
 import { LoginArgs } from "./types";
 import crypto from "crypto";
 
+const cookieOptions = {
+  httpOnly: true,
+  sameSite: true,
+  signed: true,
+  secure: process.env.NODE_ENV === "development" ? false : true
+};
+
 const loginViaGoogle = async (
   code: string,
   token: string,
-  db: DB
+  db: DB,
+  res: Response
 ): Promise<User | undefined> => {
   const { user } = await Google.login(code);
   if (!user) {
@@ -73,7 +82,38 @@ const loginViaGoogle = async (
 
     viewer = insertUser.ops[0];
   }
+  //at this point there should be cookies set up in the browser
+  res.cookie("viewer", userId, {
+    ...cookieOptions,
+    maxAge: 365 * 24 * 60 * 60 * 1000
+  });
+  console.log("logged with Google, cookies set");
   return viewer;
+};
+
+const loginViaCookie = async (
+  token: string,
+  db: DB,
+  req: Request,
+  res: Response
+): Promise<User | undefined> => {
+  try {
+    const updatedRes = await db.users.findOneAndUpdate(
+      { _id: req.signedCookies.viewer },
+      { $set: { token } },
+      { returnOriginal: false }
+    );
+    const viewer = updatedRes.value;
+    let message = "logged with cookie";
+    if (!viewer) {
+      message = "cookies cleared";
+      res.clearCookie("viewer", cookieOptions);
+    }
+    console.log(message);
+    return viewer;
+  } catch (err) {
+    console.log(err);
+  }
 };
 
 export const authResolvers: IResolvers = {
@@ -90,14 +130,15 @@ export const authResolvers: IResolvers = {
     login: async (
       _root: undefined,
       { input }: LoginArgs,
-      { db }: { db: DB }
+      { db, req, res }: { db: DB; req: Request; res: Response }
     ): Promise<Viewer> => {
       try {
         const code = input ? input.code : null;
         const token = crypto.randomBytes(16).toString("hex");
         const viewer: User | undefined = code
-          ? await loginViaGoogle(code, token, db)
-          : undefined;
+          ? //if no code  string from google try to log  in with cookie
+            await loginViaGoogle(code, token, db, res)
+          : await loginViaCookie(token, db, req, res);
         if (!viewer) {
           return { didRequest: true };
         }
@@ -112,8 +153,13 @@ export const authResolvers: IResolvers = {
         throw new Error(err);
       }
     },
-    logout: (): Viewer => {
+    logout: (
+      _root: undefined,
+      _args: Record<string, unknown>,
+      { res }: { res: Response }
+    ): Viewer => {
       try {
+        res.clearCookie("viewer", cookieOptions);
         return { didRequest: true };
       } catch (err) {
         throw new Error(err);
