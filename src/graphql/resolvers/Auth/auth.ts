@@ -98,6 +98,7 @@ const loginViaCookie = async (
   res: Response
 ): Promise<User | undefined> => {
   try {
+    console.log("logging with cookies...");
     const updatedRes = await db.users.findOneAndUpdate(
       { _id: req.signedCookies.viewer },
       { $set: { token } },
@@ -106,7 +107,7 @@ const loginViaCookie = async (
     const viewer = updatedRes.value;
     let message = "logged with cookie";
     if (!viewer) {
-      message = "cookies cleared";
+      message = "no user  found. cookies cleared";
       res.clearCookie("viewer", cookieOptions);
     }
     console.log(message);
