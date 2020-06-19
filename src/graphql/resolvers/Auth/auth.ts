@@ -1,5 +1,4 @@
 import { IResolvers } from "apollo-server-express";
-import { Response, Request } from "express";
 import { Viewer, User, DB } from "../../../models/types";
 import { Google } from "../../../lib/api";
 import { LoginArgs } from "./types";
