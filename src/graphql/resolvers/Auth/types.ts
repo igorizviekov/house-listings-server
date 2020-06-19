@@ -1,3 +1,3 @@
 export interface LoginArgs {
-  input: { code: string } | null;
+  input: { code: string; cookie: string } | null;
 }

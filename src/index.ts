@@ -3,28 +3,15 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import express, { Application } from "express";
-import bodyParser from "body-parser";
-// import cors from "cors";
 //database
 import { connectDB } from "./database/index";
-import cookieParser from "cookie-parser";
 //apollo server
 import { ApolloServer } from "apollo-server-express";
 import { typeDefs, resolvers } from "./graphql";
 
 const mount = async (app: Application) => {
   const db = await connectDB();
-  app.use(bodyParser.urlencoded({ extended: true }));
-  app.use(bodyParser.json());
 
-  //set  up cookies for log in
-  app.use(cookieParser(process.env.SECRET));
-
-  // const corsOptions = {
-  //   origin: process.env.PUBLIC_URL,
-  //   credentials: true // <-- REQUIRED backend setting
-  // };
-  // app.use(cors(corsOptions));
   //apollo setup
   const server = new ApolloServer({
     typeDefs,
