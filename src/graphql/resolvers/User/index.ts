@@ -1,4 +1,5 @@
 import { IResolvers } from "apollo-server-express";
+import { Request } from "express";
 import {
   UserArgs,
   UserBookingsArgs,
@@ -7,25 +8,26 @@ import {
   UserListingsData
 } from "./types";
 import { DB, User } from "../../../models/types";
-// import {authorize}
+import { authorize } from "../../../lib/utils";
 
 export const userResolvers: IResolvers = {
   Query: {
     user: async (
       _root: undefined,
       { id }: UserArgs,
-      { db }: { db: DB }
+      { db, req }: { db: DB; req: Request }
     ): Promise<User | undefined> => {
       try {
         const user = await db.users.findOne({ _id: id });
         if (!user) {
           throw new Error("No user found.");
         }
-        // TODO: authorize user
-        // const viewer = await authorize(db, req);
-        // if (viewer && viewer._id === user._id) {
-        //   user.authorized = true;
-        // }
+        // authorize user
+        const viewer = await authorize(db, req);
+        if (viewer && viewer._id === user._id) {
+          user.authorized = true;
+        }
+        console.log(user.authorized ? "authorized" : "not authorized");
         return user;
       } catch (err) {
         console.log(err);
@@ -43,9 +45,9 @@ export const userResolvers: IResolvers = {
       { db }: { db: DB }
     ): Promise<UserBookingsData | undefined> => {
       try {
-        // if(!user.authorized) {
-        //   return null
-        // }
+        if (!user.authorized) {
+          return undefined;
+        }
         const data: UserBookingsData = {
           total: 0,
           result: []

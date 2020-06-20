@@ -98,7 +98,7 @@ const loginViaCookie = async (
       console.log(message);
       return viewer;
     }
-    return;
+    return undefined;
   } catch (err) {
     console.log(err);
   }
