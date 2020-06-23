@@ -1,6 +1,13 @@
 import { IResolvers } from "apollo-server-express";
 import { Listing, DB, User } from "../../../models/types";
-import { ListingArgs, ListingBookingsArgs, ListingBookingsData } from "./types";
+import {
+  ListingArgs,
+  ListingsArgs,
+  ListingsData,
+  ListingBookingsArgs,
+  ListingBookingsData,
+  ListingsFilter
+} from "./types";
 import { ObjectID } from "mongodb";
 import { authorize } from "../../../lib/utils";
 import { Request } from "express";
@@ -25,6 +32,38 @@ export const listingResolvers: IResolvers = {
         return listing;
       } catch (err) {
         console.log(err);
+      }
+    },
+    listings: async (
+      _root: undefined,
+      { filter, limit, page }: ListingsArgs,
+      { db }: { db: DB }
+    ): Promise<ListingsData | undefined> => {
+      try {
+        const data: ListingsData = {
+          total: 0,
+          result: []
+        };
+        let cursor = await db.listings.find();
+        if (!cursor) {
+          throw new Error("no listings found");
+        }
+        //apply  filters
+        if (filter && filter === ListingsFilter.PRICE_HIGH_TO_LOW) {
+          cursor = cursor.sort({ price: -1 });
+        }
+        if (filter && filter === ListingsFilter.PRICE_LOW_TO_HIGH) {
+          cursor = cursor.sort({ price: 1 });
+        }
+        cursor = cursor.skip(page > 0 ? (page - 1) * limit : 0);
+        cursor = cursor.limit(limit);
+
+        (data.total = await cursor.count()),
+          (data.result = await cursor.toArray());
+
+        return data;
+      } catch (error) {
+        console.log(error);
       }
     }
   },

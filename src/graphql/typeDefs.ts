@@ -18,6 +18,10 @@ export const typeDefs = gql`
     APARTMENT
     HOUSE
   }
+  enum ListingsFilter {
+    PRICE_LOW_TO_HIGH
+    PRICE_HIGH_TO_LOW
+  }
 
   type Listing {
     id: ID!
@@ -57,14 +61,15 @@ export const typeDefs = gql`
     hasWallet: Boolean
     didRequest: Boolean!
   }
+  input LoginInput {
+    code: String
+    cookie: String
+  }
   type Query {
     authUrl: String!
     user(id: ID!): User!
     listing(id: ID!): Listing!
-  }
-  input LoginInput {
-    code: String
-    cookie: String
+    listings(filter: ListingsFilter!, limit: Int!, page: Int!): Listings!
   }
   type Mutation {
     login(input: LoginInput): Viewer!
