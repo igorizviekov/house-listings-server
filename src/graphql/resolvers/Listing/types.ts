@@ -10,6 +10,7 @@ export enum ListingsFilter {
 }
 
 export interface ListingsArgs {
+  location: string | null;
   filter: ListingsFilter;
   limit: number;
   page: number;
@@ -18,6 +19,7 @@ export interface ListingsArgs {
 export interface ListingsData {
   total: number;
   result: Listing[];
+  region?: string;
 }
 
 export interface ListingBookingsArgs {
@@ -28,4 +30,10 @@ export interface ListingBookingsArgs {
 export interface ListingBookingsData {
   total: number;
   result: Booking[];
+}
+
+export interface ParsedAddress {
+  country?: string;
+  admin?: string;
+  city?: string;
 }
