@@ -1,8 +1,10 @@
 import { IResolvers } from "apollo-server-express";
 import { Viewer, User, DB } from "../../../models/types";
-import { Google } from "../../../lib/api";
-import { LoginArgs } from "./types";
+import { Google, Stripe } from "../../../lib/api";
+import { LoginArgs, StripeArgs } from "./types";
 import crypto from "crypto";
+import { Request } from "express";
+import { authorize } from "../../../lib/utils";
 
 const loginViaGoogle = async (
   code: string,
@@ -144,6 +146,74 @@ export const authResolvers: IResolvers = {
     },
     logout: (): Viewer => {
       return { didRequest: true };
+    },
+    connectStripe: async (
+      _root: undefined,
+      { input }: StripeArgs,
+      { db, req }: { db: DB; req: Request }
+    ): Promise<Viewer> => {
+      try {
+        const { code } = input;
+        //only logged in  users
+        let viewer = await authorize(db, req);
+        if (!viewer) {
+          throw new Error("viewer can not  be found.");
+        }
+        const wallet = await Stripe.connect(code);
+        if (!wallet) {
+          throw new Error("Stripe grant error.");
+        }
+        const updatedUser = await db.users.findOneAndUpdate(
+          { _id: viewer._id },
+          { $set: { walletId: wallet.stripe_user_id } },
+          { returnOriginal: false }
+        );
+        if (!updatedUser.value) {
+          throw new Error("Viewer could not be updated.");
+        }
+        viewer = updatedUser.value;
+        return {
+          _id: viewer._id,
+          token: viewer.token,
+          avatar: viewer.avatar,
+          walletId: viewer.walletId,
+          didRequest: true
+        };
+      } catch (e) {
+        throw new Error(e);
+      }
+    },
+    disconnectStripe: async (
+      _root: undefined,
+      _args: Record<string, unknown>,
+      { db, req }: { db: DB; req: Request }
+    ): Promise<Viewer> => {
+      try {
+        let viewer = await authorize(db, req);
+        if (!viewer) {
+          throw new Error("viewer can not  be found.");
+        }
+
+        const updatedUser = await db.users.findOneAndUpdate(
+          { _id: viewer._id },
+          //remove stripe id
+          { $set: { walletId: undefined } },
+          { returnOriginal: false }
+        );
+        if (!updatedUser.value) {
+          throw new Error("Viewer could not be updated.");
+        }
+        viewer = updatedUser.value;
+        return {
+          _id: viewer._id,
+          token: viewer.token,
+          avatar: viewer.avatar,
+          walletId: viewer.walletId,
+          didRequest: true
+        };
+      } catch (e) {
+        throw new Error(e);
+      }
     }
   },
   Viewer: {

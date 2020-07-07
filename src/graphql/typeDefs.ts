@@ -68,6 +68,11 @@ export const typeDefs = gql`
     code: String
     cookie: String
   }
+
+  input StripeInput {
+    code: String!
+  }
+
   type Query {
     authUrl: String!
     user(id: ID!): User!
@@ -82,5 +87,7 @@ export const typeDefs = gql`
   type Mutation {
     login(input: LoginInput): Viewer!
     logout: Viewer!
+    connectStripe(input: StripeInput!): Viewer!
+    disconnectStripe: Viewer!
   }
 `;
