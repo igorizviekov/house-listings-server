@@ -1,5 +1,5 @@
 import { IResolvers } from "apollo-server-express";
-import { Listing, DB, User } from "../../../models/types";
+import { Listing, DB, User, ListingType } from "../../../models/types";
 import {
   ListingArgs,
   ListingsArgs,
@@ -7,12 +7,34 @@ import {
   ListingBookingsArgs,
   ListingBookingsData,
   ListingsFilter,
-  ParsedAddress
+  ParsedAddress,
+  HostListingArgs,
+  HostListingInput
 } from "./types";
-import { Google } from "../../../lib/api";
+import { Google, Cloudinary } from "../../../lib/api";
 import { ObjectID } from "mongodb";
 import { authorize } from "../../../lib/utils";
 import { Request } from "express";
+
+const verifyHostInput = ({
+  title,
+  description,
+  type,
+  price
+}: HostListingInput) => {
+  if (title.length > 100) {
+    throw new Error("Title must be under 100 characters.");
+  }
+  if (description.length > 500) {
+    throw new Error("Description must be under 500 characters.");
+  }
+  if (price < 0) {
+    throw new Error("Price must be higher then 0.");
+  }
+  if (type !== ListingType.Apartment && type !== ListingType.House) {
+    throw new Error("Type must be either Apartment or House.");
+  }
+};
 
 export const listingResolvers: IResolvers = {
   Query: {
@@ -86,6 +108,52 @@ export const listingResolvers: IResolvers = {
       } catch (error) {
         console.log(error);
       }
+    }
+  },
+  Mutation: {
+    hostListing: async (
+      _root: undefined,
+      { input }: HostListingArgs,
+      { db, req }: { db: DB; req: Request }
+    ): Promise<Listing> => {
+      //validate input
+      verifyHostInput(input);
+      // find user via csrf token
+      const viewer = await authorize(db, req);
+      if (!viewer) {
+        throw new Error("Viewer can not be found.");
+      }
+      //geo code input address
+      const parts = input.address.split(",");
+      const city = parts[1].trim();
+      const admin = parts[2].trim();
+      const { country } = await Google.geocode(input.address);
+      if (!country) {
+        throw new Error("Invalid address.");
+      }
+      //pass base64 image to cloudinary and store url in the database
+      const imageUrl = await Cloudinary.upload(input.image);
+
+      // if no errors insert new listing in database
+      const newListing = await db.listings.insertOne({
+        _id: new ObjectID(),
+        ...input,
+        image: imageUrl,
+        bookings: [],
+        bookingIndex: {},
+        city,
+        country,
+        admin,
+        host: viewer._id
+      });
+
+      //update user with new listing he created
+      const insertedListing: Listing = newListing.ops[0];
+      await db.users.updateOne(
+        { _id: viewer._id },
+        { $push: { listings: insertedListing._id } }
+      );
+      return insertedListing;
     }
   },
   Listing: {

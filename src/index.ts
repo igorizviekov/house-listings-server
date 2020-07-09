@@ -1,3 +1,4 @@
+import bodyParser from "body-parser";
 //dotenv
 import dotenv from "dotenv";
 dotenv.config();
@@ -10,7 +11,7 @@ import { typeDefs, resolvers } from "./graphql";
 
 const mount = async (app: Application) => {
   const db = await connectDB();
-
+  app.use(bodyParser.json({ limit: "2mb" }));
   //apollo setup
   const server = new ApolloServer({
     typeDefs,
