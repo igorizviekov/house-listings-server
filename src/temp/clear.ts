@@ -7,8 +7,6 @@ import { connectDB } from "../database";
 
 const clear = async () => {
   try {
-    console.log("[clear] : running...");
-
     const db = await connectDB();
 
     const bookings = await db.bookings.find({}).toArray();
@@ -26,8 +24,6 @@ const clear = async () => {
     if (users.length > 0) {
       await db.users.drop();
     }
-
-    console.log("[clear] : success");
   } catch {
     throw new Error("failed to clear database");
   }

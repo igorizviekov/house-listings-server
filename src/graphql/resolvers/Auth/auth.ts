@@ -75,7 +75,6 @@ const loginViaGoogle = async (
 
     viewer = insertUser.ops[0];
   }
-  console.log("logged with Google");
   return viewer;
 };
 
@@ -92,17 +91,14 @@ const loginViaCookie = async (
         { returnOriginal: false }
       );
       const viewer = updatedRes.value;
-      let message = "logged with cookie";
       if (!viewer) {
-        message = "no user found.";
         return;
       }
-      console.log(message);
       return viewer;
     }
     return undefined;
   } catch (err) {
-    console.log(err);
+    throw new Error(err);
   }
 };
 

@@ -55,7 +55,7 @@ export const listingResolvers: IResolvers = {
         }
         return listing;
       } catch (err) {
-        console.log(err);
+        throw new Error(err);
       }
     },
     listings: async (
@@ -106,7 +106,7 @@ export const listingResolvers: IResolvers = {
 
         return data;
       } catch (error) {
-        console.log(error);
+        throw new Error(error);
       }
     }
   },
@@ -181,7 +181,7 @@ export const listingResolvers: IResolvers = {
 
         return data;
       } catch (err) {
-        console.log(err);
+        throw new Error(err);
       }
     },
     id: (listing: Listing): string => {

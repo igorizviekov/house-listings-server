@@ -782,11 +782,9 @@ const users: User[] = [
 
 const seed = async () => {
   try {
-    console.log("[seed] : running...");
     const db = await connectDB();
     listings.forEach(async listing => await db.listings.insertOne(listing));
     users.forEach(async user => await db.users.insertOne(user));
-    console.log("[seed] : success");
   } catch {
     throw new Error("failed to seed database");
   }

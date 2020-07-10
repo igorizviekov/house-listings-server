@@ -27,10 +27,9 @@ export const userResolvers: IResolvers = {
         if (viewer && viewer._id === user._id) {
           user.authorized = true;
         }
-        console.log(user.authorized ? "authorized" : "not authorized");
         return user;
       } catch (err) {
-        console.log(err);
+        throw new Error(err);
       }
     }
   },
@@ -63,7 +62,7 @@ export const userResolvers: IResolvers = {
 
         return data;
       } catch (err) {
-        console.log(err);
+        throw new Error(err);
       }
     },
     listings: async (
@@ -87,7 +86,7 @@ export const userResolvers: IResolvers = {
 
         return data;
       } catch (err) {
-        console.log(err);
+        throw new Error(err);
       }
     }
   }
