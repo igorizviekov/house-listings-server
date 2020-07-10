@@ -14,7 +14,7 @@ interface ParsedAddress {
 const auth = new google.auth.OAuth2(
   process.env.G_CLIENT_ID,
   process.env.G_CLIENT_SECRET,
-  `${process.env.PUBLIC_URL}/login`
+  `${process.env.PUBLIC_URL}login`
 );
 
 const maps = createClient({ key: `${process.env.G_GEOCODE_KEY}`, Promise });
